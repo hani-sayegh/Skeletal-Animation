@@ -35,6 +35,11 @@ struct Joint
 };
 
 
+inline void vertex(Vec3 &v)
+{
+ glVertex3f(v.x, v.y, v.z);
+}
+
 inline std::ostream& operator<<(std::ostream& os, const Vec3& v)
 {
  os << v.x << ' ' << v.y << ' ' << v.z;

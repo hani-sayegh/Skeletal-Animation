@@ -42,31 +42,46 @@ void Skeleton::loadAnimation(std::string skelFileName)
 /*
  * Draw skeleton with OpenGL
  */
+//this is for the joints
 void Skeleton::glDrawSkeleton()
 {
  //Rigging skeleton
  glDisable(GL_DEPTH_TEST);
 
  glPushMatrix();
+ //why
  glTranslatef(-0.9,-0.9,-0.9);
+ //why
  glScalef(1.8,1.8,1.8);
- glPointSize(6);
+ //why
+ glPointSize(1);
+ //why
  glColor3f(1,0,0);
  updateScreenCoord();
 
  for (unsigned i=0; i<joints.size(); i++)
  {
+  Joint &j=joints[i];
+  if(j.parent == -1)
+   continue;
+  else
+  {
+   glColor3f(1, 0,0);
+   glBegin(GL_LINES);
+   vertex(j.position);
+   vertex(joints[j.parent].position);
+   glEnd();
+  }
   if (joints[i].isPicked)
    glColor3f(1.0, 0.0, 0.0);
   else if (joints[i].isHovered)
    glColor3f(0.7, 0.7, 0.7);
   else
-   glColor3f(0.3, 0.3, 0.3);
+   glColor3f(0.0, 1.0, 0.0);
 
   glTranslated(joints[i].position.x, joints[i].position.y, joints[i].position.z);
   glutSolidSphere(0.01, 15, 15);
   glTranslated(-joints[i].position.x, -joints[i].position.y, -joints[i].position.z);
-
  }
  glPopMatrix();
 

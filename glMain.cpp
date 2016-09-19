@@ -391,22 +391,19 @@ void mouseMoveEvent(int x, int y)
    glutPostRedisplay();
   }
  }
- /*
-  * TODO Joints
-  */
  else    
  {
   //position is with bottom left being 0,0
-  Joint selectedJoint=myDefMesh.mySkeleton.selectedJoint;
+  Skeleton &s=myDefMesh.mySkeleton;
+  Joint selectedJoint=s.selectedJoint;
   if(selectedJoint.parent == -1)
   {
    return;
   }
   else
   {
-   Vec3 &parentPosition=myDefMesh.mySkeleton.joints[selectedJoint.parent].position;
+   Vec3 &parentPosition=s.joints[selectedJoint.parent].position;
    Vec3 &childPosition=selectedJoint.position;
-   cout << childPosition << '\n';
   }
  }
 }
