@@ -43,6 +43,7 @@ void Skeleton::loadAnimation(std::string skelFileName)
  * Draw skeleton with OpenGL
  */
 //this is for the joints
+//function is called how often?
 void Skeleton::glDrawSkeleton()
 {
  //Rigging skeleton
@@ -59,12 +60,12 @@ void Skeleton::glDrawSkeleton()
  glColor3f(1,0,0);
  updateScreenCoord();
 
- for (unsigned i=0; i<joints.size(); i++)
+ Vec3 &parentJ=joints[0].position;
+ for (unsigned i=0; i< joints.size(); i++)
  {
   Joint &j=joints[i];
-  if(j.parent == -1)
-   continue;
-  else
+
+  if(j.parent != -1)
   {
    glColor3f(1, 0,0);
    glBegin(GL_LINES);
@@ -72,16 +73,35 @@ void Skeleton::glDrawSkeleton()
    vertex(joints[j.parent].position);
    glEnd();
   }
+
   if (joints[i].isPicked)
    glColor3f(1.0, 0.0, 0.0);
   else if (joints[i].isHovered)
-   glColor3f(0.7, 0.7, 0.7);
+   glColor3f(0.0, 0.0, 1.0);
   else
    glColor3f(0.0, 1.0, 0.0);
 
-  glTranslated(joints[i].position.x, joints[i].position.y, joints[i].position.z);
-  glutSolidSphere(0.01, 15, 15);
-  glTranslated(-joints[i].position.x, -joints[i].position.y, -joints[i].position.z);
+  /* static double angle=0; */
+  /* angle+=0.01; */
+  double angle=joints[i].angle;
+  /* cout << angle << endl; */
+
+
+  //translate to original position of parent.
+  glTranslated( parentJ.x,  parentJ.y,  parentJ.z);
+  //rotate about parent which is at origin.	
+  glRotatef(angle,0, 0, 1);
+  //translate point so that parent is on origin.
+  glTranslated(joints[i].position.x - parentJ.x, joints[i].position.y - parentJ.y, joints[i].position.z - parentJ.z);
+
+  glutSolidSphere(0.015, 15, 15);
+
+  glTranslated(-joints[i].position.x + parentJ.x, -joints[i].position.y + parentJ.y, -joints[i].position.z + parentJ.z);
+  glRotatef(-angle,0, 0, 1);
+  glTranslated( -parentJ.x,  -parentJ.y,  -parentJ.z);
+
+  /* if(angle > 90) */
+  /*  angle=0; */
  }
  glPopMatrix();
 

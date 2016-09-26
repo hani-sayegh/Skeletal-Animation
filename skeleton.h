@@ -26,6 +26,7 @@ struct Joint
  bool isHovered;
  bool isPicked;
  int parent;
+ double angle=0;
 
  Joint()
  {
@@ -40,6 +41,11 @@ inline void vertex(Vec3 &v)
  glVertex3f(v.x, v.y, v.z);
 }
 
+inline std::ostream& operator<<(std::ostream& os, const Vec2& v)
+{
+ os << v.x << ' ' << v.y;
+ return os;
+}
 inline std::ostream& operator<<(std::ostream& os, const Vec3& v)
 {
  os << v.x << ' ' << v.y << ' ' << v.z;

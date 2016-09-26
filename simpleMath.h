@@ -1,5 +1,6 @@
 #ifndef SIMPLEMATH_H
 #define SIMPLEMATH_H
+#include <cmath>
 //Vectors
 struct Vec3
 {
@@ -50,5 +51,19 @@ double dot3(Vec3 a, Vec3 b);
 
 double dot4(Vec4 a, Vec4 b);
 
+inline Vec2 operator-(Vec2 &a, Vec2 &b)
+{
+ return Vec2(a.x-b.x, a.y-b.y);
+}
+
+inline Vec3 operator-(Vec3 &a, Vec3 &b)
+{
+ return Vec3(a.x-b.x, a.y-b.y, a.z-b.z);
+}
+
+inline double mag(Vec2 a)
+{
+ return sqrt(a.x*a.x + a.y*a.y);
+}
 
 #endif
