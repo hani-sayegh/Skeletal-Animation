@@ -64,15 +64,15 @@ void Skeleton::glDrawSkeleton()
 
  for (unsigned i=0; i< joints.size(); i++)
  {
-  Joint &j=joints[i];
+  Vec3 &j=joints[i].position;
   Vec3 parentJ=joints[0].position;
 
-  if(j.parent != -1)
+  if(joints[i].parent != -1)
   {
-   parentJ=joints[j.parent].position;
+   parentJ=joints[joints[i].parent].position;
    glColor3f(1, 0,0);
    glBegin(GL_LINES);
-   vertex(j.position);
+   vertex(j);
    vertex(parentJ);
    glEnd();
   }
@@ -86,7 +86,7 @@ void Skeleton::glDrawSkeleton()
 
   double angle=joints[i].angle;
 
-  Vec3 diff=joints[i].position - parentJ;
+  Vec3 diff=j - parentJ;
   glm::mat4 tran = glm::translate(glm::mat4(1.f), glm::vec3(diff.x, diff.y, diff.z));
   glm::mat4 rot  = glm::rotate(glm::mat4(1.f), float(angle * 3.14159265 / 180.f), glm::vec3(0, 0, 1));
   glm::mat4 tran2= glm::translate(glm::mat4(1.f), glm::vec3(parentJ.x, parentJ.y, parentJ.z));

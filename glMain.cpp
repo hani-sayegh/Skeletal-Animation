@@ -22,6 +22,7 @@ DefMesh myDefMesh;
 //Switches
 int meshModel=0;
 bool drawSkeleton=true;
+bool add=false;
 
 //Window parameters
 int width = 1024;
@@ -278,7 +279,6 @@ void mouseEvent(int button, int state, int x, int y)
   switch (button) {
    case GLUT_LEFT_BUTTON:
     myDefMesh.mySkeleton.release();
-    _mouseLeft =false;
     break;
    case GLUT_MIDDLE_BUTTON:
     _mouseMiddle = false;
@@ -291,6 +291,7 @@ void mouseEvent(int button, int state, int x, int y)
     case GLUT_LEFT_BUTTON:
      myDefMesh.mySkeleton.selectOrReleaseJoint();
      _mouseLeft = true;
+     add=true;
      break;
     case GLUT_MIDDLE_BUTTON:
      _mouseMiddle = true;
@@ -324,6 +325,8 @@ void mousePassiveFunc(int x, int y)
 {
  myDefMesh.mySkeleton.checkHoveringStatus(x, y);
 }
+
+   double amount=0;
 void mouseMoveEvent(int x, int y)
 {
  if (!myDefMesh.mySkeleton.hasJointSelected)
@@ -419,15 +422,26 @@ void mouseMoveEvent(int x, int y)
    diff.y = -diff.y;
    diff2.y = -diff2.y;
 
+
+   double what= (diff.x*diff2.y) - (diff.y*diff2.x);
    double dot=dot2(diff, diff2);
    double mag1=mag(diff);
    double mag2=mag(diff2);
    double tMag=mag1*mag2;
    double angle=acos(dot/tMag) * 180 / 3.14159265;
-   if(x > _mouseX)
-    selectedJoint.angle=-angle;
+
+   if(add)
+   {
+    amount=selectedJoint.angle;
+    add=false;
+   }
+
+   if(what > 0)
+    selectedJoint.angle=angle + amount;
    else
-    selectedJoint.angle=angle;
+    selectedJoint.angle=-angle + amount;
+
+    cout << selectedJoint.angle << endl;
   }
  }
 }

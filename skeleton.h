@@ -15,6 +15,8 @@
 #endif
 #endif
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "simpleMath.h"
 
 
@@ -27,6 +29,7 @@ struct Joint
  bool isPicked;
  int parent;
  double angle=0;
+ glm::vec4 local;
 
  Joint()
  {
