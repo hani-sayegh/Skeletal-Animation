@@ -394,7 +394,7 @@ void mouseMoveEvent(int x, int y)
  {
   //position is with bottom left being 0,0
   Skeleton &s=myDefMesh.mySkeleton;
-  Joint &selectedJoint=s.selectedJoint;
+  Joint &selectedJoint=s.joints[s.selectedJoint];
 
   //never change position of the parent.
   if(selectedJoint.parent == -1)
@@ -424,12 +424,10 @@ void mouseMoveEvent(int x, int y)
    double mag2=mag(diff2);
    double tMag=mag1*mag2;
    double angle=acos(dot/tMag) * 180 / 3.14159265;
-   selectedJoint.angle=angle;
-
-   /* cout << diff << endl; */
-   /* cout << diff2 << endl; */
-   /* cout << angle << endl; */
-
+   if(x > _mouseX)
+    selectedJoint.angle=-angle;
+   else
+    selectedJoint.angle=angle;
   }
  }
 }

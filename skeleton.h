@@ -61,7 +61,7 @@ class Skeleton
 
   /*True if the skeleton has a joint selected*/
   bool hasJointSelected;   
-  Joint selectedJoint;
+  int selectedJoint;
   Skeleton(){hasJointSelected = false;}
   /*
    * Load Skeleton file

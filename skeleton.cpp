@@ -1,6 +1,8 @@
 #include "skeleton.h"
 #include "splitstring.h"
 #include <cmath>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 /*
  * Load skeleton file
@@ -60,17 +62,18 @@ void Skeleton::glDrawSkeleton()
  glColor3f(1,0,0);
  updateScreenCoord();
 
- Vec3 &parentJ=joints[0].position;
  for (unsigned i=0; i< joints.size(); i++)
  {
   Joint &j=joints[i];
+  Vec3 parentJ=joints[0].position;
 
   if(j.parent != -1)
   {
+   parentJ=joints[j.parent].position;
    glColor3f(1, 0,0);
    glBegin(GL_LINES);
    vertex(j.position);
-   vertex(joints[j.parent].position);
+   vertex(parentJ);
    glEnd();
   }
 
@@ -81,27 +84,36 @@ void Skeleton::glDrawSkeleton()
   else
    glColor3f(0.0, 1.0, 0.0);
 
-  /* static double angle=0; */
-  /* angle+=0.01; */
   double angle=joints[i].angle;
-  /* cout << angle << endl; */
 
+  Vec3 diff=joints[i].position - parentJ;
+  glm::mat4 tran = glm::translate(glm::mat4(1.f), glm::vec3(diff.x, diff.y, diff.z));
+  glm::mat4 rot  = glm::rotate(glm::mat4(1.f), float(angle * 3.14159265 / 180.f), glm::vec3(0, 0, 1));
+  glm::mat4 tran2= glm::translate(glm::mat4(1.f), glm::vec3(parentJ.x, parentJ.y, parentJ.z));
+  glm::vec4 fp =  tran2 * rot * tran * glm::vec4(0.0, 0.0, 0.0, 1.0);
 
-  //translate to original position of parent.
-  glTranslated( parentJ.x,  parentJ.y,  parentJ.z);
-  //rotate about parent which is at origin.	
-  glRotatef(angle,0, 0, 1);
-  //translate point so that parent is on origin.
-  glTranslated(joints[i].position.x - parentJ.x, joints[i].position.y - parentJ.y, joints[i].position.z - parentJ.z);
+  /* glm::mat4 tran = glm::translate(glm::mat4(1.f), glm::vec3(diff.x, diff.y, diff.z)); */
+  /* glm::mat4 rot  = glm::rotate(tran, float(angle * 3.14159265 / 180.f), glm::vec3(0, 0, 1)); */
+  /* glm::mat4 tran2= glm::translate(rot, glm::vec3(parentJ.x, parentJ.y, parentJ.z)); */
+  /* glm::vec4 fp =    glm::vec4(0.0, 0.0, 0.0, 1.0) * tran2; */
+
+  glTranslated(fp.x, fp.y, fp.z);
 
   glutSolidSphere(0.015, 15, 15);
 
-  glTranslated(-joints[i].position.x + parentJ.x, -joints[i].position.y + parentJ.y, -joints[i].position.z + parentJ.z);
-  glRotatef(-angle,0, 0, 1);
-  glTranslated( -parentJ.x,  -parentJ.y,  -parentJ.z);
+  glTranslated(-fp.x, -fp.y, -fp.z);
 
-  /* if(angle > 90) */
-  /*  angle=0; */
+  /* //translate to original position of parent. */
+  /* glTranslated( parentJ.x,  parentJ.y,  parentJ.z); */
+  /* //rotate about parent which is at origin. */	
+  /* glRotatef(angle,0, 0, 1); */
+  /* //translate point so that parent is on origin. */
+  /* glTranslated(joints[i].position.x - parentJ.x, joints[i].position.y - parentJ.y, joints[i].position.z - parentJ.z); */
+
+
+  /* glTranslated(-joints[i].position.x + parentJ.x, -joints[i].position.y + parentJ.y, -joints[i].position.z + parentJ.z); */
+  /* glRotatef(-angle,0, 0, 1); */
+  /* glTranslated( -parentJ.x,  -parentJ.y,  -parentJ.z); */
  }
  glPopMatrix();
 
@@ -177,7 +189,7 @@ void Skeleton::selectOrReleaseJoint()
    hasHovered = true;
    joints[i].isPicked = true;
    hasJointSelected = true;
-   selectedJoint=joints[i];
+   selectedJoint=i;
   }
  }
  if (!hasHovered)    //Release joint
