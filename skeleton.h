@@ -29,7 +29,7 @@ struct Joint
  bool isPicked;
  int parent;
  double angle=0;
- glm::vec4 local;
+ int child=-1;
 
  Joint()
  {

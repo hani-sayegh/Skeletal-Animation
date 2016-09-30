@@ -326,7 +326,7 @@ void mousePassiveFunc(int x, int y)
  myDefMesh.mySkeleton.checkHoveringStatus(x, y);
 }
 
-   double amount=0;
+double amount=0;
 void mouseMoveEvent(int x, int y)
 {
  if (!myDefMesh.mySkeleton.hasJointSelected)
@@ -437,11 +437,17 @@ void mouseMoveEvent(int x, int y)
    }
 
    if(what > 0)
+   {
     selectedJoint.angle=angle + amount;
+    int child = selectedJoint.child;
+    while(child != -1)
+    {
+     /* s.joints[child].angle = s.joints[child].angle + angle; */
+     /* child = s.joints[child].child; */
+    }
+   }
    else
     selectedJoint.angle=-angle + amount;
-
-    cout << selectedJoint.angle << endl;
   }
  }
 }

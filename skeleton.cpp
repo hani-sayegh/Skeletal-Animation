@@ -23,6 +23,10 @@ void Skeleton::loadSkeleton(std::string skelFileName)
    temp.position.z = std::atof(boneParams[3].c_str());
 
    temp.parent=std::atoi(boneParams[4].c_str());
+   if(temp.parent != -1)
+   {
+    joints[temp.parent].child=std::atoi(boneParams[0].c_str());
+   }
 
    if (std::atoi(boneParams[0].c_str()) != joints.size())
    {
@@ -70,19 +74,8 @@ void Skeleton::glDrawSkeleton()
   if(joints[i].parent != -1)
   {
    parentJ=joints[joints[i].parent].position;
-   glColor3f(1, 0,0);
-   glBegin(GL_LINES);
-   vertex(j);
-   vertex(parentJ);
-   glEnd();
   }
 
-  if (joints[i].isPicked)
-   glColor3f(1.0, 0.0, 0.0);
-  else if (joints[i].isHovered)
-   glColor3f(0.0, 0.0, 1.0);
-  else
-   glColor3f(0.0, 1.0, 0.0);
 
   double angle=joints[i].angle;
 
@@ -92,10 +85,20 @@ void Skeleton::glDrawSkeleton()
   glm::mat4 tran2= glm::translate(glm::mat4(1.f), glm::vec3(parentJ.x, parentJ.y, parentJ.z));
   glm::vec4 fp =  tran2 * rot * tran * glm::vec4(0.0, 0.0, 0.0, 1.0);
 
-  /* glm::mat4 tran = glm::translate(glm::mat4(1.f), glm::vec3(diff.x, diff.y, diff.z)); */
-  /* glm::mat4 rot  = glm::rotate(tran, float(angle * 3.14159265 / 180.f), glm::vec3(0, 0, 1)); */
-  /* glm::mat4 tran2= glm::translate(rot, glm::vec3(parentJ.x, parentJ.y, parentJ.z)); */
-  /* glm::vec4 fp =    glm::vec4(0.0, 0.0, 0.0, 1.0) * tran2; */
+
+  Vec3 pos=Vec3(fp.x, fp.y, fp.z);
+  glColor3f(1, 0,0);
+  glBegin(GL_LINES);
+  vertex(pos);
+  vertex(parentJ);
+  glEnd();
+
+  if (joints[i].isPicked)
+   glColor3f(1.0, 0.0, 0.0);
+  else if (joints[i].isHovered)
+   glColor3f(0.0, 0.0, 1.0);
+  else
+   glColor3f(0.0, 1.0, 0.0);
 
   glTranslated(fp.x, fp.y, fp.z);
 
