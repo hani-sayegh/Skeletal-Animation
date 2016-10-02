@@ -327,6 +327,7 @@ void mousePassiveFunc(int x, int y)
 }
 
 double amount=0;
+double preAngle=0;
 void mouseMoveEvent(int x, int y)
 {
  if (!myDefMesh.mySkeleton.hasJointSelected)
@@ -428,26 +429,41 @@ void mouseMoveEvent(int x, int y)
    double mag1=mag(diff);
    double mag2=mag(diff2);
    double tMag=mag1*mag2;
+
+   //added to original
    double angle=acos(dot/tMag) * 180 / 3.14159265;
 
    if(add)
    {
+    //original angle
     amount=selectedJoint.angle;
+    preAngle=0;
     add=false;
    }
 
-   if(what > 0)
+   int orientation=what >0;
+   if(orientation)
    {
     selectedJoint.angle=angle + amount;
-    int child = selectedJoint.child;
-    while(child != -1)
-    {
-     /* s.joints[child].angle = s.joints[child].angle + angle; */
-     /* child = s.joints[child].child; */
-    }
+    /* int child = selectedJoint.child; */
+    /* while(child != -1) */
+    /* { */
+    /*  s.joints[child].angle = s.joints[child].angle + angle - preAngle; */
+    /*  child = s.joints[child].child; */
+    /* } */
    }
    else
+   {
     selectedJoint.angle=-angle + amount;
+    /* int child = selectedJoint.child; */
+    /* while(child != -1) */
+    /* { */
+    /*  s.joints[child].angle = s.joints[child].angle - angle - preAngle; */
+    /*  child = s.joints[child].child; */
+    /* } */
+   }
+
+   preAngle = angle * -((orientation - (3 * orientation)) + 1)  ;
   }
  }
 }

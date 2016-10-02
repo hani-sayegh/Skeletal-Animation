@@ -21,6 +21,7 @@ void Skeleton::loadSkeleton(std::string skelFileName)
    temp.position.x = std::atof(boneParams[1].c_str());
    temp.position.y = std::atof(boneParams[2].c_str());
    temp.position.z = std::atof(boneParams[3].c_str());
+   temp.globalP=glm::vec4(temp.position.x, temp.position.y, temp.position.z, 1.0);
 
    temp.parent=std::atoi(boneParams[4].c_str());
    if(temp.parent != -1)
@@ -52,6 +53,11 @@ void Skeleton::loadAnimation(std::string skelFileName)
 //function is called how often?
 void Skeleton::glDrawSkeleton()
 {
+ for(auto i = 0; i != joints.size(); ++i)
+ {
+  joints[i].globalP = glm::vec4(joints[i].position.x, joints[i].position.y, joints[i].position.z, 1.0);
+ }
+
  //Rigging skeleton
  glDisable(GL_DEPTH_TEST);
 
@@ -69,28 +75,81 @@ void Skeleton::glDrawSkeleton()
  for (unsigned i=0; i< joints.size(); i++)
  {
   Vec3 &j=joints[i].position;
-  Vec3 parentJ=joints[0].position;
+  glm::vec4 parentJ=joints[0].globalP;
+
 
   if(joints[i].parent != -1)
   {
-   parentJ=joints[joints[i].parent].position;
+   parentJ=joints[joints[i].parent].globalP;
   }
 
 
   double angle=joints[i].angle;
 
-  Vec3 diff=j - parentJ;
-  glm::mat4 tran = glm::translate(glm::mat4(1.f), glm::vec3(diff.x, diff.y, diff.z));
-  glm::mat4 rot  = glm::rotate(glm::mat4(1.f), float(angle * 3.14159265 / 180.f), glm::vec3(0, 0, 1));
-  glm::mat4 tran2= glm::translate(glm::mat4(1.f), glm::vec3(parentJ.x, parentJ.y, parentJ.z));
-  glm::vec4 fp =  tran2 * rot * tran * glm::vec4(0.0, 0.0, 0.0, 1.0);
 
+  Joint currJoint=joints[i];
+  Joint parJoint=joints[currJoint.parent];
+
+  //default value for final position of joint after all transformations
+
+  int temp = i;
+  while(joints[temp].angle != 0)
+  {
+   int chosenJ = i == temp;
+
+   glm::vec3 diff;
+
+   /* if(chosenJ) */
+   diff=glm::vec3(currJoint.globalP) - glm::vec3(parentJ);
+   /* else */
+   /*  diff=glm::vec3(currJoint.position.x, currJoint.position.y, currJoint.position.z) - glm::vec3(parentJ); */
+
+   glm::mat4 tran = glm::translate(glm::mat4(1.f), diff);
+   glm::mat4 rot  = glm::rotate(glm::mat4(1.f), float(angle * 3.14159265 / 180.f), glm::vec3(0, 0, 1));
+   glm::mat4 tran2= glm::translate(glm::mat4(1.f), glm::vec3(parentJ));
+   glm::vec4 finalMult =tran2 * rot * tran * glm::vec4(0.0, 0.0, 0.0, 1.0); 
+
+   //only change child globalP, this way currJoint can use its global to rotate correctly around its parent using its local angle
+   /* if(!chosenJ) */
+   joints[i].globalP=finalMult;
+   /* else */
+   /* { */
+   /*  //this is for the currentJoint */
+   /*  fp = finalMult; */
+
+   /*  //store the position of this joint after rotating with local angle */
+   /*  joints[i].afterLocal = finalMult; */
+   /* } */
+
+   i = currJoint.child;
+
+   if(i == -1)
+   {
+    i = temp;
+    currJoint=joints[i];
+    break;
+   }
+
+   currJoint=joints[i];
+  }
+
+  glm::vec4  go=(joints[0].globalP);
+  if(joints[i].parent != -1)
+  {
+   go=(joints[joints[i].parent].globalP);
+  }
+
+  glm::vec4 fp = currJoint.globalP;
+
+  /* glm::vec4 & fp=currJoint.globalP; */
 
   Vec3 pos=Vec3(fp.x, fp.y, fp.z);
+  Vec3 posP=Vec3(go.x, go.y, go.z);
+
   glColor3f(1, 0,0);
   glBegin(GL_LINES);
   vertex(pos);
-  vertex(parentJ);
+  vertex(posP);
   glEnd();
 
   if (joints[i].isPicked)
