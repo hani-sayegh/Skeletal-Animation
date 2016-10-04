@@ -32,7 +32,7 @@ struct Joint
  double angle=0;
  int child=-1;
  glm::vec4 globalP;
- float globalAngle=0;
+ glm::mat4 T;
 
  Joint()
  {

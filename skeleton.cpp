@@ -57,7 +57,8 @@ void Skeleton::glDrawSkeleton()
  for(auto i = 0; i != joints.size(); ++i)
  {
   joints[i].globalP = glm::vec4(joints[i].position.x, joints[i].position.y, joints[i].position.z, 1.0);
-  joints[i].globalAngle = 0;
+  /* joints[i].globalAngle = 0; */
+  joints[i].T = glm::mat4(1.f);
  }
 
  //Rigging skeleton
@@ -107,6 +108,15 @@ void Skeleton::glDrawSkeleton()
    glm::mat4 tran2= glm::translate(glm::mat4(1.f), glm::vec3(parentJ));
    glm::vec4 finalMult =tran2 * rot * tran * glm::vec4(0.0, 0.0, 0.0, 1.0); 
 
+
+
+   glm::mat4 tran3 = glm::translate(glm::mat4(1.f), glm::vec3(parentJ));
+   glm::mat4 tran4 = glm::translate(glm::mat4(1.f), glm::vec3(-parentJ));
+   //cannot just do -tran3, since that is different that translate with -parentJ
+   joints[i].T *= tran3 * rot * tran4;
+
+
+
    joints[i].globalP=finalMult;
 
    i = currJoint.child;
@@ -119,7 +129,6 @@ void Skeleton::glDrawSkeleton()
    }
 
    currJoint=joints[i];
-   joints[i].globalAngle += angle;
   }
 
   glm::vec4  go=(joints[0].globalP);
