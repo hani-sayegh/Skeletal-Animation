@@ -430,8 +430,9 @@ void mouseMoveEvent(int x, int y)
    double mag2=mag(diff2);
    double tMag=mag1*mag2;
 
+
    //added to original
-   double angle=acos(dot/tMag) * 180 / 3.14159265;
+   double angle=acos(dot/tMag);
 
    if(add)
    {
@@ -445,22 +446,35 @@ void mouseMoveEvent(int x, int y)
    if(orientation)
    {
     selectedJoint.angle=angle + amount;
-    /* int child = selectedJoint.child; */
-    /* while(child != -1) */
-    /* { */
-    /*  s.joints[child].angle = s.joints[child].angle + angle - preAngle; */
-    /*  child = s.joints[child].child; */
-    /* } */
    }
    else
    {
     selectedJoint.angle=-angle + amount;
-    /* int child = selectedJoint.child; */
-    /* while(child != -1) */
-    /* { */
-    /*  s.joints[child].angle = s.joints[child].angle - angle - preAngle; */
-    /*  child = s.joints[child].child; */
-    /* } */
+   }
+
+   for(auto i = 3; i != 3 * 6670; i+=3)
+   {
+    glm::vec4 fp;
+    glm::vec4 iP=glm::vec4(myDefMesh.pmodel->vertices[i], myDefMesh.pmodel->vertices[i + 1], myDefMesh.pmodel->vertices[i + 2], 1.0);
+    for(auto j = 0; j != 17; ++j)
+    {
+     float cW = myDefMesh.weights[j + (i / 3 - 1) * 17];
+     glm::mat4 rot;
+     glm::mat4 tran;
+     glm::mat4 tran2;
+
+     glm::vec4 pP = glm::vec4(s.joints[16].position.x, s.joints[16].position.y, s.joints[16].position.z,  1.f);
+     tran = glm::translate(glm::mat4(1.f), glm::vec3(iP-pP));
+     tran2 = glm::translate(glm::mat4(1.f), glm::vec3(pP));
+
+     if(j == 16)
+     {
+      rot = glm::rotate(glm::mat4(1.f), float(myDefMesh.mySkeleton.joints[17].angle), glm::vec3(0, 0, 1));
+     }
+
+     fp += cW * tran2 * rot *  tran * glm::vec4(0.0, 0.0, 0.0, 1.0); 
+    }
+    myDefMesh.pmodel->vertices[i] = fp.x, myDefMesh.pmodel->vertices[i + 1] = fp.y, myDefMesh.pmodel->vertices[i + 2] = fp.z;
    }
 
    preAngle = angle * -((orientation - (3 * orientation)) + 1)  ;
@@ -488,7 +502,6 @@ void display()
  glPopMatrix();
 
  glPushMatrix();
-
  myDefMesh.glDraw(meshModel);
 
  glPopMatrix();

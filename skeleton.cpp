@@ -53,6 +53,7 @@ void Skeleton::loadAnimation(std::string skelFileName)
 //function is called how often?
 void Skeleton::glDrawSkeleton()
 {
+ //reset coordinates
  for(auto i = 0; i != joints.size(); ++i)
  {
   joints[i].globalP = glm::vec4(joints[i].position.x, joints[i].position.y, joints[i].position.z, 1.0);
@@ -70,7 +71,7 @@ void Skeleton::glDrawSkeleton()
  glPointSize(1);
  //why
  glColor3f(1,0,0);
- updateScreenCoord();
+
 
  for (unsigned i=0; i< joints.size(); i++)
  {
@@ -95,31 +96,20 @@ void Skeleton::glDrawSkeleton()
   int temp = i;
   while(joints[temp].angle != 0)
   {
-   int chosenJ = i == temp;
+   /* joints[i].finalAngle += angle; */
+/* cout << joints[i].finalAngle << endl; */
+/* cout << joints[i].angle << endl; */
 
    glm::vec3 diff;
 
-   /* if(chosenJ) */
    diff=glm::vec3(currJoint.globalP) - glm::vec3(parentJ);
-   /* else */
-   /*  diff=glm::vec3(currJoint.position.x, currJoint.position.y, currJoint.position.z) - glm::vec3(parentJ); */
 
    glm::mat4 tran = glm::translate(glm::mat4(1.f), diff);
-   glm::mat4 rot  = glm::rotate(glm::mat4(1.f), float(angle * 3.14159265 / 180.f), glm::vec3(0, 0, 1));
+   glm::mat4 rot  = glm::rotate(glm::mat4(1.f), float(angle), glm::vec3(0, 0, 1));
    glm::mat4 tran2= glm::translate(glm::mat4(1.f), glm::vec3(parentJ));
    glm::vec4 finalMult =tran2 * rot * tran * glm::vec4(0.0, 0.0, 0.0, 1.0); 
 
-   //only change child globalP, this way currJoint can use its global to rotate correctly around its parent using its local angle
-   /* if(!chosenJ) */
    joints[i].globalP=finalMult;
-   /* else */
-   /* { */
-   /*  //this is for the currentJoint */
-   /*  fp = finalMult; */
-
-   /*  //store the position of this joint after rotating with local angle */
-   /*  joints[i].afterLocal = finalMult; */
-   /* } */
 
    i = currJoint.child;
 
@@ -165,20 +155,10 @@ void Skeleton::glDrawSkeleton()
 
   glTranslated(-fp.x, -fp.y, -fp.z);
 
-  /* //translate to original position of parent. */
-  /* glTranslated( parentJ.x,  parentJ.y,  parentJ.z); */
-  /* //rotate about parent which is at origin. */	
-  /* glRotatef(angle,0, 0, 1); */
-  /* //translate point so that parent is on origin. */
-  /* glTranslated(joints[i].position.x - parentJ.x, joints[i].position.y - parentJ.y, joints[i].position.z - parentJ.z); */
-
-
-  /* glTranslated(-joints[i].position.x + parentJ.x, -joints[i].position.y + parentJ.y, -joints[i].position.z + parentJ.z); */
-  /* glRotatef(-angle,0, 0, 1); */
-  /* glTranslated( -parentJ.x,  -parentJ.y,  -parentJ.z); */
  }
+ //has to be here ...why?
+ updateScreenCoord();
  glPopMatrix();
-
  glEnable(GL_DEPTH_TEST);
 }
 
@@ -194,7 +174,7 @@ void Skeleton::updateScreenCoord()
  glGetIntegerv( GL_VIEWPORT, viewport );
  for (unsigned i=0; i<joints.size(); i++)
  {
-  gluProject((GLdouble)joints[i].position.x, (GLdouble)joints[i].position.y, (GLdouble)joints[i].position.z,
+  gluProject((GLdouble)joints[i].globalP.x, (GLdouble)joints[i].globalP.y, (GLdouble)joints[i].globalP.z,
     modelview, projection, viewport,
     &winX, &winY, &winZ );
   joints[i].screenCoord.x = winX;

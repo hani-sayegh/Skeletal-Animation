@@ -6,13 +6,15 @@
 #define MESH_H
 #include "./glm.h"
 #include "./skeleton.h"
+#include <vector>
 class DefMesh
 {
-public:
-    Skeleton mySkeleton;
-    GLMmodel * pmodel;
-    GLuint mode;
-    DefMesh(); 
-    void glDraw(int type);
+ public:
+  Skeleton mySkeleton;
+  std::vector<double> weights;
+  GLMmodel * pmodel;
+  GLuint mode;
+  DefMesh(); 
+  void glDraw(int type);
 };
 #endif

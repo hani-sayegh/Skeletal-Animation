@@ -31,7 +31,7 @@ struct Joint
  double angle=0;
  int child=-1;
  glm::vec4 globalP;
- glm::vec4 afterLocal;
+ int finalAngle=0;
 
  Joint()
  {
