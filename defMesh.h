@@ -13,6 +13,7 @@ class DefMesh
   Skeleton mySkeleton;
   std::vector<double> weights;
   GLMmodel * pmodel;
+  std::vector<float> cpy;
   GLuint mode;
   DefMesh(); 
   void glDraw(int type);

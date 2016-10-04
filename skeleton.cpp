@@ -57,6 +57,7 @@ void Skeleton::glDrawSkeleton()
  for(auto i = 0; i != joints.size(); ++i)
  {
   joints[i].globalP = glm::vec4(joints[i].position.x, joints[i].position.y, joints[i].position.z, 1.0);
+  joints[i].globalAngle = 0;
  }
 
  //Rigging skeleton
@@ -96,9 +97,6 @@ void Skeleton::glDrawSkeleton()
   int temp = i;
   while(joints[temp].angle != 0)
   {
-   /* joints[i].finalAngle += angle; */
-/* cout << joints[i].finalAngle << endl; */
-/* cout << joints[i].angle << endl; */
 
    glm::vec3 diff;
 
@@ -121,6 +119,7 @@ void Skeleton::glDrawSkeleton()
    }
 
    currJoint=joints[i];
+   joints[i].globalAngle += angle;
   }
 
   glm::vec4  go=(joints[0].globalP);

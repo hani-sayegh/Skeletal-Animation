@@ -27,11 +27,12 @@ struct Joint
  Vec2 screenCoord;
  bool isHovered;
  bool isPicked;
+
  int parent;
  double angle=0;
  int child=-1;
  glm::vec4 globalP;
- int finalAngle=0;
+ float globalAngle=0;
 
  Joint()
  {

@@ -35,6 +35,10 @@ DefMesh::DefMesh()
   }
   //3 * 6670
  }
+ for(auto i = 0; i != 3*6670; ++i)
+ {
+  cpy.push_back(pmodel->vertices[i]);
+ }
  mySkeleton.loadSkeleton("./model/skeleton.out");
 }
 void DefMesh::glDraw(int type)
