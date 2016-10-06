@@ -463,21 +463,11 @@ void mouseMoveEvent(int x, int y)
     glm::vec4 iP=glm::vec4(myDefMesh.cpy[i], myDefMesh.cpy[i + 1], myDefMesh.cpy[i + 2], 1.0);
     for(auto j = 0; j != 17; ++j)
     {
+     /* cout << j + (i / 3 - 1) * 17 << endl; */
      float cW = myDefMesh.weights[j + (i / 3 - 1) * 17];
+     /* cout << myDefMesh.weights.size() << endl; */
 
-     /* Vec3 &pp =s.joints[s.joints[j + 1].parent].position; */
-
-     //Below is the parent Position of the joint in question
-     /* glm::vec4 pP = glm::vec4(pp.x, pp.y, pp.z,  1.f); */
-
-     /* tran = glm::translate(glm::mat4(1.f), glm::vec3(-pP)); */
-     /* tran2 = glm::translate(glm::mat4(1.f), glm::vec3(pP)); */
-
-     /* //angle of current joint about its parent */
-     /* rot = glm::rotate(glm::mat4(1.f), float(myDefMesh.mySkeleton.joints[j + 1].angle + s.joints[j + 1].globalAngle), glm::vec3(0, 0, 1)); */
-
-     /* fp += cW * tran2 * rot *  tran * iP; */ 
-     fp += cW * s.joints[j + 1].T * iP; 
+      fp += cW * s.joints[j + 1].T * iP; 
     }
     myDefMesh.pmodel->vertices[i] = fp.x, myDefMesh.pmodel->vertices[i + 1] = fp.y, myDefMesh.pmodel->vertices[i + 2] = fp.z;
    }
