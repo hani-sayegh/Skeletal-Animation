@@ -59,7 +59,6 @@ void Skeleton::glDrawSkeleton()
  for(auto i = 0; i != joints.size(); ++i)
  {
   joints[i].globalP = glm::vec4(joints[i].position.x, joints[i].position.y, joints[i].position.z, 1.0);
-  /* joints[i].globalAngle = 0; */
   joints[i].T = glm::mat4(1.f);
  }
 
@@ -106,19 +105,15 @@ void Skeleton::glDrawSkeleton()
    diff=glm::vec3(currJoint.globalP) - glm::vec3(parentJ);
 
    glm::mat4 tran = glm::translate(glm::mat4(1.f), diff);
-   /* glm::mat4 rot  = glm::rotate(glm::mat4(1.f), float(angle), axis); */
    glm::mat4 rot  = glm::rotate(glm::mat4(1.f), float(angle), glm::vec3(0, 0, 1));
    glm::mat4 tran2= glm::translate(glm::mat4(1.f), glm::vec3(parentJ));
    glm::vec4 finalMult =tran2 * rot * tran * glm::vec4(0.0, 0.0, 0.0, 1.0); 
 
+   glm::mat4 tParentPos = glm::translate(glm::mat4(1.f), glm::vec3(parentJ));
+   glm::mat4 tNegParentPos = glm::translate(glm::mat4(1.f), glm::vec3(-parentJ));
 
-
-   glm::mat4 tran3 = glm::translate(glm::mat4(1.f), glm::vec3(parentJ));
-   glm::mat4 tran4 = glm::translate(glm::mat4(1.f), glm::vec3(-parentJ));
-   //cannot just do -tran3, since that is different that translate with -parentJ
-   joints[i].T = tran3 * rot * tran4 * joints[i].T;
-
-
+   //cannot just do -tParentPos, since that is different that translate with -parentJ
+   joints[i].T = tParentPos * rot * tNegParentPos * joints[i].T;
 
    joints[i].globalP=finalMult;
 
@@ -184,28 +179,6 @@ void Skeleton::updateScreenCoord()
  glGetDoublev( GL_PROJECTION_MATRIX, projection );
  glGetIntegerv( GL_VIEWPORT, viewport );
 
- gluUnProject(0.2, 0.2, -0.2,
-   modelview, projection, viewport,
-   &winX, &winY, &winZ );
- glm::vec3 now(winX, winY, winZ);
-/* cout << winX << " " << winY << " " << winZ << endl; */
-
- gluUnProject(0.5, 0.5, -0.5,
-   modelview, projection, viewport,
-   &winX, &winY, &winZ );
- glm::vec3 now2(winX, winY, winZ);
-
- gluUnProject(0.7, 0.7, -0.7,
-   modelview, projection, viewport,
-   &winX, &winY, &winZ );
- glm::vec3 now3(winX, winY, winZ);
- now2 = now2 - now;
- now3 = now3 - now;
-
- glm::vec3 finish= glm::cross(now2, now3);
- axis.x = finish.x; 
- axis.y = finish.y; 
- axis.z = finish.z; 
 
  for (unsigned i=0; i<joints.size(); i++)
  {

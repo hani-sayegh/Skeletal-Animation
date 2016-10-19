@@ -16,7 +16,7 @@
 #endif
 
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include "simpleMath.h"
 
 
@@ -29,10 +29,18 @@ struct Joint
  bool isPicked;
 
  int parent;
- double angle=0;
  int child=-1;
+
+ //angle of this joint relative to parent
+ double angle=0;
+
+ //final position of this joint
  glm::vec4 globalP;
+
+ //matrix to tramsform a position by correct amount of rotation
  glm::mat4 T;
+
+ glm::fquat rot;
 
  Joint()
  {

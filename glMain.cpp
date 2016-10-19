@@ -233,6 +233,7 @@ void init()
 
 }
 
+void recordPose();
 void changeSize(int w, int h)
 {
  glViewport(0, 0, w, h);
@@ -261,11 +262,23 @@ void handleKeyPress(unsigned char key, int x, int y)
  {
   case 'm':
    meshModel = (meshModel+1)%3; break;
+  case 't':
+   recordPose();
+   break;
   case 'q':
    exit(0);
  }
 }
 
+void recordPose()
+{
+ std::vector<Joint> &j=myDefMesh.mySkeleton.joints;
+ for(auto i = 0; i != j.size(); ++i)
+ {
+  j[i].angle=0;
+  j[i].globalP = glm::vec4(j[i].position.x, j[i].position.y, j[i].position.z, 1.0);
+ }
+}
 
 void mouseEvent(int button, int state, int x, int y)
 {
@@ -452,10 +465,6 @@ void mouseMoveEvent(int x, int y)
     selectedJoint.angle=-angle + amount;
    }
 
-   glm::mat4 tran;
-   glm::mat4 tran2;
-   glm::mat4 rot;
-
    for(auto i = 3; i != 3 * 6670; i+=3)
    {
     //for each vertex find its final poistion
@@ -467,7 +476,7 @@ void mouseMoveEvent(int x, int y)
      float cW = myDefMesh.weights[j + (i / 3 - 1) * 17];
      /* cout << myDefMesh.weights.size() << endl; */
 
-      fp += cW * s.joints[j + 1].T * iP; 
+     fp += cW * s.joints[j + 1].T * iP; 
     }
     myDefMesh.pmodel->vertices[i] = fp.x, myDefMesh.pmodel->vertices[i + 1] = fp.y, myDefMesh.pmodel->vertices[i + 2] = fp.z;
    }
