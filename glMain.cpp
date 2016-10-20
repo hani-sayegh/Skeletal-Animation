@@ -234,6 +234,7 @@ void init()
 }
 
 void recordPose();
+void playPose(char);
 void changeSize(int w, int h)
 {
  glViewport(0, 0, w, h);
@@ -263,21 +264,89 @@ void handleKeyPress(unsigned char key, int x, int y)
   case 'm':
    meshModel = (meshModel+1)%3; break;
   case 't':
+   cout << "recording pose" << endl;
    recordPose();
+   break;
+  case '=':
+   cout << "forward play" << endl;
+   playPose('=');
+   break;
+  case '-':
+   cout << "backward play" << endl;
+   playPose('-');
    break;
   case 'q':
    exit(0);
  }
 }
 
+struct Pose
+{
+ vector<float> angles;
+ vector<glm::mat4> Ts;
+ int nPose=0;
+};
+
+Pose p;
+
+void playPose(char direction)
+{
+ static int poseNumber = -1;
+
+ if(direction == '=')
+ {
+  if(poseNumber == p.nPose - 1)
+   return;
+  ++poseNumber;
+ }
+ else if(direction == '-')
+ {
+  if(poseNumber == -1)
+   ++poseNumber;
+  else if(poseNumber != 0)
+   --poseNumber;
+ }
+
+ std::vector<Joint> &j=myDefMesh.mySkeleton.joints;
+
+ for(auto i = 0; i != j.size(); ++i)
+ {
+  int index= i + poseNumber*18;
+  j[i].angle=p.angles[index];
+  j[i].T=p.Ts[index];
+ }
+
+ for(auto i = 3; i != 3 * 6670; i+=3)
+ {
+  //for each vertex find its final poistion
+  glm::vec4 fp;
+  glm::vec4 iP=glm::vec4(myDefMesh.cpy[i], myDefMesh.cpy[i + 1], myDefMesh.cpy[i + 2], 1.0);
+  for(auto j = 0; j != 17; ++j)
+  {
+   /* cout << j + (i / 3 - 1) * 17 << endl; */
+   float cW = myDefMesh.weights[j + (i / 3 - 1) * 17];
+   /* cout << myDefMesh.weights.size() << endl; */
+
+   fp += cW * myDefMesh.mySkeleton.joints[j + 1].T * iP; 
+  }
+  myDefMesh.pmodel->vertices[i] = fp.x, myDefMesh.pmodel->vertices[i + 1] = fp.y, myDefMesh.pmodel->vertices[i + 2] = fp.z;
+ }
+}
+
+//Go through each joint a store its local angle and gloabl transformation
 void recordPose()
 {
+ ++p.nPose;
  std::vector<Joint> &j=myDefMesh.mySkeleton.joints;
  for(auto i = 0; i != j.size(); ++i)
  {
-  j[i].angle=0;
-  j[i].globalP = glm::vec4(j[i].position.x, j[i].position.y, j[i].position.z, 1.0);
+  /* j[i].angle=0; */
+  /* /1* j[i].globalP = glm::vec4(j[i].position.x, j[i].position.y, j[i].position.z, 1.0); *1/ */
+  /* j[i].T=glm::mat4(1.0); */
+  p.angles.push_back(j[i].angle);
+  p.Ts.push_back(j[i].T);
  }
+
 }
 
 void mouseEvent(int button, int state, int x, int y)
