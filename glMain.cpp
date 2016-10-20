@@ -235,6 +235,61 @@ void init()
 
 void recordPose();
 void playPose(char);
+
+struct Pose
+{
+ vector<float> angles;
+ vector<glm::mat4> Ts;
+ int nPose=0;
+};
+
+Pose p;
+
+static float stepSize = 0.1;
+static bool noAnimate=true;
+
+void animate(int value)
+{
+ if(noAnimate)
+  return;
+
+ static float t=0;
+
+ //do animation here
+ //fi = f1 + t(f2-f1)
+ glm::mat4 f1 = p.Ts[3];
+ glm::mat4 f2 = p.Ts[3 + 18] - p.Ts[3];
+ glm::mat4 finalMatrix = f1 + t*f2;
+
+ for(auto i = 3; i != 3 * 6670; i+=3)
+ {
+  //for each vertex find its final poistion
+  glm::vec4 fp;
+  glm::vec4 iP=glm::vec4(myDefMesh.cpy[i], myDefMesh.cpy[i + 1], myDefMesh.cpy[i + 2], 1.0);
+  for(auto j = 0; j != 17; ++j)
+  {
+   float cW = myDefMesh.weights[j + (i / 3 - 1) * 17];
+
+   if(j != 2)
+    fp += cW * myDefMesh.mySkeleton.joints[j + 1].T * iP; 
+   else
+    fp += cW * finalMatrix * iP; 
+  }
+  myDefMesh.pmodel->vertices[i] = fp.x, myDefMesh.pmodel->vertices[i + 1] = fp.y, myDefMesh.pmodel->vertices[i + 2] = fp.z;
+ }
+ //
+ t+=stepSize;
+ //interesting effect when t is not bounded
+ if(t > 1)
+  t=0;
+
+ glutPostRedisplay();
+
+ //call every tenth of a second
+ glutTimerFunc(100, animate, 1);
+}
+
+
 void changeSize(int w, int h)
 {
  glViewport(0, 0, w, h);
@@ -268,26 +323,29 @@ void handleKeyPress(unsigned char key, int x, int y)
    recordPose();
    break;
   case '=':
-   cout << "forward play" << endl;
    playPose('=');
    break;
   case '-':
-   cout << "backward play" << endl;
    playPose('-');
+   break;
+  case 'p':
+   noAnimate=!noAnimate;
+   animate(1);
+   break;
+  case 'k':
+   stepSize+=0.1;
+   stepSize =min(1.f, stepSize);
+   break;
+  case 'j':
+   stepSize-=0.1;
+   stepSize =max(0.f, stepSize);
    break;
   case 'q':
    exit(0);
  }
 }
 
-struct Pose
-{
- vector<float> angles;
- vector<glm::mat4> Ts;
- int nPose=0;
-};
 
-Pose p;
 
 void playPose(char direction)
 {
