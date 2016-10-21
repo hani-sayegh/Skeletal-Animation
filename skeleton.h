@@ -32,7 +32,7 @@ struct Joint
  int child=-1;
 
  //angle of this joint relative to parent
- double angle=0;
+ float angle=0;
 
  //final position of this joint
  glm::vec4 globalP;

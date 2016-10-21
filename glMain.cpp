@@ -250,16 +250,44 @@ static bool noAnimate=true;
 
 void animate(int value)
 {
- if(noAnimate)
+ if(noAnimate  )
   return;
 
  static float t=0;
+ static int pose=0;
 
  //do animation here
  //fi = f1 + t(f2-f1)
- glm::mat4 f1 = p.Ts[3];
- glm::mat4 f2 = p.Ts[3 + 18] - p.Ts[3];
- glm::mat4 finalMatrix = f1 + t*f2;
+
+ float f1a = p.angles[3];
+ float f2a = p.angles[3 + 18] - p.angles[3];
+ float finalAngle = f1a + t*f2a;
+
+ myDefMesh.mySkeleton.joints[3].angle=finalAngle;
+
+ /* glm::mat4 f1 = p.Ts[3]; */
+ /* glm::mat4 f2 = p.Ts[3 + 18] - p.Ts[3]; */
+ /* glm::mat4 finalMatrix = f1 + t*f2; */
+
+ /* glm::mat4 interpolated [p.nPose * 17]; */
+ /* int shit = 0; */
+ /* for(auto i = 0; i != (p.nPose - 1) * 17; ++i) */
+ /* { */
+ /*  if((i + shit) % 18 == 0) */
+ /*   ++shit; */
+ /*  glm::mat4 f1 = p.Ts[i + shit]; */
+ /*  glm::mat4 f2 = p.Ts[i + shit + 18] - f1; */
+ /*  interpolated[i] = f1 + t*f2; */
+ /* } */
+
+ glm::mat4 interpolated [17];
+ for(auto i = 0; i != 17; ++i)
+ {
+  int add = 1 + pose * 18;
+  glm::mat4 f1 = p.Ts[i + add];
+  glm::mat4 f2 = p.Ts[i + add + 18] - f1;
+  interpolated[i] = f1 + t*f2;
+ }
 
  for(auto i = 3; i != 3 * 6670; i+=3)
  {
@@ -270,18 +298,23 @@ void animate(int value)
   {
    float cW = myDefMesh.weights[j + (i / 3 - 1) * 17];
 
-   if(j != 2)
-    fp += cW * myDefMesh.mySkeleton.joints[j + 1].T * iP; 
-   else
-    fp += cW * finalMatrix * iP; 
+   /* fp += cW * interpolated[j + pose * 17] * iP; */ 
+   fp += cW * interpolated[j] * iP; 
   }
   myDefMesh.pmodel->vertices[i] = fp.x, myDefMesh.pmodel->vertices[i + 1] = fp.y, myDefMesh.pmodel->vertices[i + 2] = fp.z;
  }
- //
+
+
  t+=stepSize;
  //interesting effect when t is not bounded
  if(t > 1)
+ {
   t=0;
+  ++pose;
+ }
+
+ if(pose == p.nPose - 1)
+  pose=0;
 
  glutPostRedisplay();
 
@@ -329,6 +362,8 @@ void handleKeyPress(unsigned char key, int x, int y)
    playPose('-');
    break;
   case 'p':
+   if(p.nPose < 2)
+    return;
    noAnimate=!noAnimate;
    animate(1);
    break;
@@ -398,9 +433,6 @@ void recordPose()
  std::vector<Joint> &j=myDefMesh.mySkeleton.joints;
  for(auto i = 0; i != j.size(); ++i)
  {
-  /* j[i].angle=0; */
-  /* /1* j[i].globalP = glm::vec4(j[i].position.x, j[i].position.y, j[i].position.z, 1.0); *1/ */
-  /* j[i].T=glm::mat4(1.0); */
   p.angles.push_back(j[i].angle);
   p.Ts.push_back(j[i].T);
  }
