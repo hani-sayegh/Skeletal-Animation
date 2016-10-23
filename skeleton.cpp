@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+extern bool noAnimate;
 /*
  * Load skeleton file
  */
@@ -56,10 +57,13 @@ glm::vec3 axis=glm::vec3(0, 0, 1);
 void Skeleton::glDrawSkeleton()
 {
  //reset coordinates
- for(auto i = 0; i != joints.size(); ++i)
+ if(noAnimate)
  {
-  joints[i].globalP = glm::vec4(joints[i].position.x, joints[i].position.y, joints[i].position.z, 1.0);
-  joints[i].T = glm::mat4(1.f);
+  for(auto i = 0; i != joints.size(); ++i)
+  {
+   joints[i].globalP = glm::vec4(joints[i].position.x, joints[i].position.y, joints[i].position.z, 1.0);
+   joints[i].T = glm::mat4(1.f);
+  }
  }
 
  //Rigging skeleton
@@ -96,37 +100,40 @@ void Skeleton::glDrawSkeleton()
 
   //default value for final position of joint after all transformations
 
-  int temp = i;
-  while(joints[temp].angle != 0)
+  if(noAnimate)
   {
-
-   glm::vec3 diff;
-
-   diff=glm::vec3(currJoint.globalP) - glm::vec3(parentJ);
-
-   glm::mat4 tran = glm::translate(glm::mat4(1.f), diff);
-   glm::mat4 rot  = glm::rotate(glm::mat4(1.f), float(angle), glm::vec3(0, 0, 1));
-   glm::mat4 tran2= glm::translate(glm::mat4(1.f), glm::vec3(parentJ));
-   glm::vec4 finalMult =tran2 * rot * tran * glm::vec4(0.0, 0.0, 0.0, 1.0); 
-
-   glm::mat4 tParentPos = glm::translate(glm::mat4(1.f), glm::vec3(parentJ));
-   glm::mat4 tNegParentPos = glm::translate(glm::mat4(1.f), glm::vec3(-parentJ));
-
-   //cannot just do -tParentPos, since that is different that translate with -parentJ
-   joints[i].T = tParentPos * rot * tNegParentPos * joints[i].T;
-
-   joints[i].globalP=finalMult;
-
-   i = currJoint.child;
-
-   if(i == -1)
+   int temp = i;
+   while(joints[temp].angle != 0)
    {
-    i = temp;
-    currJoint=joints[i];
-    break;
-   }
 
-   currJoint=joints[i];
+    glm::vec3 diff;
+
+    diff=glm::vec3(currJoint.globalP) - glm::vec3(parentJ);
+
+    glm::mat4 tran = glm::translate(glm::mat4(1.f), diff);
+    glm::mat4 rot  = glm::rotate(glm::mat4(1.f), float(angle), glm::vec3(0, 0, 1));
+    glm::mat4 tran2= glm::translate(glm::mat4(1.f), glm::vec3(parentJ));
+    glm::vec4 finalMult =tran2 * rot * tran * glm::vec4(0.0, 0.0, 0.0, 1.0); 
+
+    glm::mat4 tParentPos = glm::translate(glm::mat4(1.f), glm::vec3(parentJ));
+    glm::mat4 tNegParentPos = glm::translate(glm::mat4(1.f), glm::vec3(-parentJ));
+
+    //cannot just do -tParentPos, since that is different that translate with -parentJ
+    joints[i].T = tParentPos * rot * tNegParentPos * joints[i].T;
+
+    joints[i].globalP=finalMult;
+
+    i = currJoint.child;
+
+    if(i == -1)
+    {
+     i = temp;
+     currJoint=joints[i];
+     break;
+    }
+
+    currJoint=joints[i];
+   }
   }
 
   glm::vec4  go=(joints[0].globalP);
@@ -135,9 +142,7 @@ void Skeleton::glDrawSkeleton()
    go=(joints[joints[i].parent].globalP);
   }
 
-  glm::vec4 fp = currJoint.globalP;
-
-  /* glm::vec4 & fp=currJoint.globalP; */
+  glm::vec4 fp = joints[i].T * glm::vec4(joints[i].position.x, joints[i].position.y, joints[i].position.z, 1.0);
 
   Vec3 pos=Vec3(fp.x, fp.y, fp.z);
   Vec3 posP=Vec3(go.x, go.y, go.z);

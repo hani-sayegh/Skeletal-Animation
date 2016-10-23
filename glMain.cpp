@@ -246,7 +246,8 @@ struct Pose
 Pose p;
 
 static float stepSize = 0.1;
-static bool noAnimate=true;
+bool noAnimate=true;
+int interpolationType = 1;
 
 void animate(int value)
 {
@@ -259,34 +260,17 @@ void animate(int value)
  //do animation here
  //fi = f1 + t(f2-f1)
 
- float f1a = p.angles[3];
- float f2a = p.angles[3 + 18] - p.angles[3];
- float finalAngle = f1a + t*f2a;
-
- myDefMesh.mySkeleton.joints[3].angle=finalAngle;
-
- /* glm::mat4 f1 = p.Ts[3]; */
- /* glm::mat4 f2 = p.Ts[3 + 18] - p.Ts[3]; */
- /* glm::mat4 finalMatrix = f1 + t*f2; */
-
- /* glm::mat4 interpolated [p.nPose * 17]; */
- /* int shit = 0; */
- /* for(auto i = 0; i != (p.nPose - 1) * 17; ++i) */
- /* { */
- /*  if((i + shit) % 18 == 0) */
- /*   ++shit; */
- /*  glm::mat4 f1 = p.Ts[i + shit]; */
- /*  glm::mat4 f2 = p.Ts[i + shit + 18] - f1; */
- /*  interpolated[i] = f1 + t*f2; */
- /* } */
-
  glm::mat4 interpolated [17];
+
  for(auto i = 0; i != 17; ++i)
  {
+  Joint &currJoint = myDefMesh.mySkeleton.joints[i+1];
   int add = 1 + pose * 18;
   glm::mat4 f1 = p.Ts[i + add];
   glm::mat4 f2 = p.Ts[i + add + 18] - f1;
   interpolated[i] = f1 + t*f2;
+  currJoint.T = interpolated[i];
+  currJoint.globalP = currJoint.T * glm::vec4(currJoint.position.x, currJoint.position.y, currJoint.position.z, 1.0);
  }
 
  for(auto i = 3; i != 3 * 6670; i+=3)
@@ -374,6 +358,22 @@ void handleKeyPress(unsigned char key, int x, int y)
   case 'j':
    stepSize-=0.1;
    stepSize =max(0.f, stepSize);
+   break;
+  case '1':
+   cout << "You have chosen matrix linear interpolation" << endl;
+   interpolationType = 1;
+   break;
+  case '2':
+   cout << "You have chosen euler angle interpolation" << endl;
+   interpolationType = 2;
+   break;
+  case '3':
+   cout << "You have chosen quaternion linear interpolation" << endl;
+   interpolationType = 3;
+   break;
+  case '4':
+   cout << "You have chosen Slerp" << endl;
+   interpolationType = 4;
    break;
   case 'q':
    exit(0);
@@ -696,5 +696,3 @@ int main(int argc, char **argv)
 
  return 0;
 }
-
-
