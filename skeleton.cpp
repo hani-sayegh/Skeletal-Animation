@@ -92,7 +92,7 @@ void Skeleton::glDrawSkeleton()
   }
 
 
-  double angle=joints[i].angle;
+  float angle=joints[i].angle;
 
 
   Joint currJoint=joints[i];
@@ -122,49 +122,50 @@ void Skeleton::glDrawSkeleton()
     joints[i].T = tParentPos * rot * tNegParentPos * joints[i].T;
 
     joints[i].globalP=finalMult;
+    joints[i].rot=glm::angleAxis(angle, glm::vec3(0, 0, 1));
 
-    i = currJoint.child;
+      i = currJoint.child;
 
-    if(i == -1)
-    {
-     i = temp;
-     currJoint=joints[i];
-     break;
-    }
+      if(i == -1)
+      {
+      i = temp;
+      currJoint=joints[i];
+      break;
+      }
 
-    currJoint=joints[i];
-   }
-  }
+      currJoint=joints[i];
+      }
+      }
 
-  glm::vec4  go=(joints[0].globalP);
-  if(joints[i].parent != -1)
-  {
-   go=(joints[joints[i].parent].globalP);
-  }
+      glm::vec4  go=(joints[0].globalP);
+      if(joints[i].parent != -1)
+      {
+      go=(joints[joints[i].parent].globalP);
+      }
 
-  glm::vec4 fp = joints[i].T * glm::vec4(joints[i].position.x, joints[i].position.y, joints[i].position.z, 1.0);
+      glm::vec4 fp = joints[i].T * glm::vec4(joints[i].position.x, joints[i].position.y, joints[i].position.z, 1.0);
 
-  Vec3 pos=Vec3(fp.x, fp.y, fp.z);
-  Vec3 posP=Vec3(go.x, go.y, go.z);
+      Vec3 pos=Vec3(fp.x, fp.y, fp.z);
+      Vec3 posP=Vec3(go.x, go.y, go.z);
 
-  glColor3f(1, 0,0);
-  glBegin(GL_LINES);
-  vertex(pos);
-  vertex(posP);
-  glEnd();
+      glColor3f(1, 0,0);
+      glBegin(GL_LINES);
+      vertex(pos);
+      vertex(posP);
+      glEnd();
 
-  if (joints[i].isPicked)
-   glColor3f(1.0, 0.0, 0.0);
-  else if (joints[i].isHovered)
-   glColor3f(0.0, 0.0, 1.0);
-  else
-   glColor3f(0.0, 1.0, 0.0);
+      if (joints[i].isPicked)
+       glColor3f(1.0, 0.0, 0.0);
+      else if (joints[i].isHovered)
+       glColor3f(0.0, 0.0, 1.0);
+      else
+       glColor3f(0.0, 1.0, 0.0);
 
-  glTranslated(fp.x, fp.y, fp.z);
+      glTranslated(fp.x, fp.y, fp.z);
 
-  glutSolidSphere(0.015, 15, 15);
+      glutSolidSphere(0.015, 15, 15);
 
-  glTranslated(-fp.x, -fp.y, -fp.z);
+      glTranslated(-fp.x, -fp.y, -fp.z);
 
  }
  //has to be here ...why?
@@ -196,9 +197,13 @@ void Skeleton::updateScreenCoord()
 }
 void Skeleton::checkHoveringStatus(int x, int y)
 {
+ //todo fix this
+ if(!noAnimate)
+  return;
  double distance = 0.0f;
  double minDistance = 1000.0f;
  int hoveredJoint = -1;
+
  for(unsigned i=0; i < joints.size(); i++)
  {
   joints[i].isHovered = false;

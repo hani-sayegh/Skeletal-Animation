@@ -240,6 +240,7 @@ struct Pose
 {
  vector<float> angles;
  vector<glm::mat4> Ts;
+ glm::fquat qs[18];
  int nPose=0;
 };
 
@@ -266,11 +267,16 @@ void animate(int value)
  {
   Joint &currJoint = myDefMesh.mySkeleton.joints[i+1];
   int add = 1 + pose * 18;
-  glm::mat4 f1 = p.Ts[i + add];
-  glm::mat4 f2 = p.Ts[i + add + 18] - f1;
-  interpolated[i] = f1 + t*f2;
-  currJoint.T = interpolated[i];
-  currJoint.globalP = currJoint.T * glm::vec4(currJoint.position.x, currJoint.position.y, currJoint.position.z, 1.0);
+
+  glm::mat4 test=glm::mat4_cast(glm::lerp(p.qs[i + add], p.qs[i + add + 18], t));
+
+  /* glm::mat4 f1 = p.Ts[i + add]; */
+  /* glm::mat4 f2 = p.Ts[i + add + 18] - f1; */
+  /* interpolated[i] = f1 + t*f2; */
+  /* currJoint.T = interpolated[i]; */
+  /* currJoint.globalP = currJoint.T * glm::vec4(currJoint.position.x, currJoint.position.y, currJoint.position.z, 1.0); */
+
+  interpolated[i] = test;
  }
 
  for(auto i = 3; i != 3 * 6670; i+=3)
@@ -282,8 +288,8 @@ void animate(int value)
   {
    float cW = myDefMesh.weights[j + (i / 3 - 1) * 17];
 
-   /* fp += cW * interpolated[j + pose * 17] * iP; */ 
-   fp += cW * interpolated[j] * iP; 
+   fp += cW * (myDefMesh.mySkeleton.joints[0].globalP + interpolated[j] * (iP - myDefMesh.mySkeleton.joints[0].globalP)); 
+   /* fp += cW * interpolated[j] * iP; */ 
   }
   myDefMesh.pmodel->vertices[i] = fp.x, myDefMesh.pmodel->vertices[i + 1] = fp.y, myDefMesh.pmodel->vertices[i + 2] = fp.z;
  }
@@ -435,6 +441,7 @@ void recordPose()
  {
   p.angles.push_back(j[i].angle);
   p.Ts.push_back(j[i].T);
+  p.qs[i] = j[i].rot;
  }
 
 }
@@ -628,14 +635,16 @@ void mouseMoveEvent(int x, int y)
    {
     //for each vertex find its final poistion
     glm::vec4 fp;
+    /* glm::vec4 iP=glm::vec4(myDefMesh.cpy[i], myDefMesh.cpy[i + 1], myDefMesh.cpy[i + 2], 1.0); */
     glm::vec4 iP=glm::vec4(myDefMesh.cpy[i], myDefMesh.cpy[i + 1], myDefMesh.cpy[i + 2], 1.0);
     for(auto j = 0; j != 17; ++j)
     {
-     /* cout << j + (i / 3 - 1) * 17 << endl; */
      float cW = myDefMesh.weights[j + (i / 3 - 1) * 17];
-     /* cout << myDefMesh.weights.size() << endl; */
 
      fp += cW * s.joints[j + 1].T * iP; 
+     /* fp += cW * (s.joints[s.joints[j+1].parent].globalP + s.joints[j + 1].rot * (iP - s.joints[s.joints[j+1].parent].globalP)); */ 
+     /* fp += cW *  s.joints[j + 1].rot * iP; */ 
+
     }
     myDefMesh.pmodel->vertices[i] = fp.x, myDefMesh.pmodel->vertices[i + 1] = fp.y, myDefMesh.pmodel->vertices[i + 2] = fp.z;
    }
