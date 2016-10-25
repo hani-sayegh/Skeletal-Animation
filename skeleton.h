@@ -18,6 +18,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "simpleMath.h"
+#include "quaternion.h"
 
 
 
@@ -41,6 +42,7 @@ struct Joint
  glm::mat4 T;
 
  glm::fquat rot;
+ Quaternion customQ;
 
  Joint()
  {

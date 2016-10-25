@@ -13,6 +13,9 @@
 #include <cstring>
 #include "skeleton.h"
 #include "defMesh.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include "quaternion.h"
+
 using namespace std;
 
 
@@ -240,7 +243,10 @@ struct Pose
 {
  vector<float> angles;
  vector<glm::mat4> Ts;
- glm::fquat qs[18];
+ /* vector<glm::fquat> qs; */
+
+ vector<Quaternion> qs;
+
  int nPose=0;
 };
 
@@ -248,7 +254,7 @@ Pose p;
 
 static float stepSize = 0.1;
 bool noAnimate=true;
-int interpolationType = 1;
+int interpolationType = 3;
 
 void animate(int value)
 {
@@ -268,15 +274,47 @@ void animate(int value)
   Joint &currJoint = myDefMesh.mySkeleton.joints[i+1];
   int add = 1 + pose * 18;
 
-  glm::mat4 test=glm::mat4_cast(glm::lerp(p.qs[i + add], p.qs[i + add + 18], t));
+  if(interpolationType == 3)
+  {
+   /* glm::mat4 test=glm::mat4_cast(glm::lerp(p.qs[i + add], p.qs[i + add + 18], t)); */
+   /* interpolated[i] = test; */
 
-  /* glm::mat4 f1 = p.Ts[i + add]; */
-  /* glm::mat4 f2 = p.Ts[i + add + 18] - f1; */
-  /* interpolated[i] = f1 + t*f2; */
-  /* currJoint.T = interpolated[i]; */
-  /* currJoint.globalP = currJoint.T * glm::vec4(currJoint.position.x, currJoint.position.y, currJoint.position.z, 1.0); */
+   glm::mat4 test=Quaternion::matrix(Quaternion::lerp(p.qs[i + add], p.qs[i + add + 18], t));
 
-  interpolated[i] = test;
+
+   interpolated[i] = test;
+  }
+
+  if(interpolationType == 1)
+  {
+   glm::mat4 f1 = p.Ts[i + add];
+   glm::mat4 f2 = p.Ts[i + add + 18] - f1;
+   interpolated[i] = f1 + t*f2;
+   currJoint.T = interpolated[i];
+   currJoint.globalP = currJoint.T * glm::vec4(currJoint.position.x, currJoint.position.y, currJoint.position.z, 1.0);
+  }
+ }
+
+ glm::mat4 justfnow [17];
+ if(interpolationType == 3)
+ {
+  //below is only for quat
+  auto & access = myDefMesh.mySkeleton.joints;
+  for(auto i = 0; i != 17; ++i)
+  {
+   glm::vec4 parentJ=access[access[i + 1].parent].globalP;
+
+   glm::mat4 tParentPos = glm::translate(glm::mat4(1.f), glm::vec3(parentJ));
+   glm::mat4 rot = interpolated[i];
+   glm::mat4 tNegParentPos = glm::translate(glm::mat4(1.f), glm::vec3(-parentJ));
+
+   int currentJointIndex = i;
+   while(currentJointIndex != -2 && access[i + 1].angle != 0)
+   {
+    justfnow[currentJointIndex]= tParentPos * rot * tNegParentPos * justfnow[currentJointIndex];
+    currentJointIndex = access[currentJointIndex + 1].child - 1;
+   }
+  }
  }
 
  for(auto i = 3; i != 3 * 6670; i+=3)
@@ -288,8 +326,14 @@ void animate(int value)
   {
    float cW = myDefMesh.weights[j + (i / 3 - 1) * 17];
 
-   fp += cW * (myDefMesh.mySkeleton.joints[0].globalP + interpolated[j] * (iP - myDefMesh.mySkeleton.joints[0].globalP)); 
-   /* fp += cW * interpolated[j] * iP; */ 
+   auto ppos =myDefMesh.mySkeleton.joints[myDefMesh.mySkeleton.joints[j + 1].parent].globalP;
+
+   if(interpolationType == 1)
+    fp += cW * interpolated[j] * iP; 
+
+   if(interpolationType == 3)
+    /* fp += cW * (ppos + interpolated[j] * (iP - ppos)); */ 
+    fp += cW * justfnow[j] * iP; 
   }
   myDefMesh.pmodel->vertices[i] = fp.x, myDefMesh.pmodel->vertices[i + 1] = fp.y, myDefMesh.pmodel->vertices[i + 2] = fp.z;
  }
@@ -441,7 +485,8 @@ void recordPose()
  {
   p.angles.push_back(j[i].angle);
   p.Ts.push_back(j[i].T);
-  p.qs[i] = j[i].rot;
+  /* p.qs.push_back(j[i].rot); */
+  p.qs.push_back(j[i].customQ);
  }
 
 }
