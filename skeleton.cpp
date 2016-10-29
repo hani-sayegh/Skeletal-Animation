@@ -102,8 +102,8 @@ void Skeleton::glDrawSkeleton()
 
   joints[i].rot=glm::angleAxis(angle, glm::vec3(0, 0, 1));
 
-  joints[i].customQ.angle = angle;
-  joints[i].customQ.axis = glm::vec3(0, 0, 1);
+  glm::vec3 zaxis = glm::vec3(0, 0, 1);
+  joints[i].customQ = Quaternion::angleAxis(angle, zaxis);
 
   if(noAnimate)
   {

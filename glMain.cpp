@@ -243,9 +243,9 @@ struct Pose
 {
  vector<float> angles;
  vector<glm::mat4> Ts;
- /* vector<glm::fquat> qs; */
+ vector<glm::fquat> qs;
 
- vector<Quaternion> qs;
+ vector<Quaternion> as;
 
  int nPose=0;
 };
@@ -279,10 +279,28 @@ void animate(int value)
    /* glm::mat4 test=glm::mat4_cast(glm::lerp(p.qs[i + add], p.qs[i + add + 18], t)); */
    /* interpolated[i] = test; */
 
-   glm::mat4 test=Quaternion::matrix(Quaternion::lerp(p.qs[i + add], p.qs[i + add + 18], t));
+   /* for(auto i = 0; i != 4; ++i) */
+   /* { */
+   /*  for(auto j = 0; j != 4; ++j) */
+   /*  { */
+   /*   cout << test[i][j] << '\t'; */
+   /*  } */
+   /*  cout << endl; */
+   /* } */
 
-
+   glm::mat4 test=Quaternion::matrix(Quaternion::lerp(p.as[i + add], p.as[i + add + 18], t));
    interpolated[i] = test;
+
+   /* for(auto i = 0; i != 4; ++i) */
+   /* { */
+   /*  for(auto j = 0; j != 4; ++j) */
+   /*  { */
+   /*   cout << test[i][j] << '\t'; */
+   /*  } */
+   /*  cout << endl; */
+   /* } */
+
+   /* exit(0); */
   }
 
   if(interpolationType == 1)
@@ -485,8 +503,8 @@ void recordPose()
  {
   p.angles.push_back(j[i].angle);
   p.Ts.push_back(j[i].T);
-  /* p.qs.push_back(j[i].rot); */
-  p.qs.push_back(j[i].customQ);
+  p.qs.push_back(j[i].rot);
+  p.as.push_back(j[i].customQ);
  }
 
 }
