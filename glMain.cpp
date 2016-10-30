@@ -250,7 +250,7 @@ struct Pose
  int nPose=0;
 };
 
-Pose p;
+static Pose p;
 
 static float stepSize = 0.1;
 bool noAnimate=true;
@@ -327,6 +327,7 @@ void animate(int value)
    glm::mat4 tNegParentPos = glm::translate(glm::mat4(1.f), glm::vec3(-parentJ));
 
    int currentJointIndex = i;
+   //bug here when loading from file
    while(currentJointIndex != -2 && access[i + 1].angle != 0)
    {
     justfnow[currentJointIndex]= tParentPos * rot * tNegParentPos * justfnow[currentJointIndex];
@@ -397,6 +398,48 @@ void timerFunction(int value)
  glutTimerFunc(10,timerFunction,1);
  glutPostRedisplay();
 }
+
+void save()
+{
+ cout << "Choose file name you would like to save to: " << std::flush;
+ string filename = "test";
+ /* cin >> filename; */
+ std::ofstream f;
+ f.open(filename + ".anim");
+ const auto & quaternions = p.as;
+ f << p.nPose << '\n';
+ for(auto quat : quaternions)
+ {
+  f << quat.angle;
+  f << ' ' << quat.axis.x;
+  f << ' ' << quat.axis.y;
+  f << ' ' << quat.axis.z;
+  f << '\n';
+ }
+}
+
+void load()
+{
+ cout << "Choose file name you would like to load from: " << std::flush;
+ string filename = "test";
+ /* cin >> filename; */
+ std::ifstream f(filename + ".anim");
+ p.as.clear();
+ f >> p.nPose;
+ float val;
+ while(f >> val)
+ {
+  float x, y, z;
+  f >> x >> y >> z;
+
+  Quaternion q;
+  q.angle = val;
+  q.axis = glm::vec3(x, y, z);
+  p.as.push_back(q);
+ }
+ cout << "Done loading animation file: " << filename << endl;
+}
+
 void handleKeyPress(unsigned char key, int x, int y)
 { 
  switch(key)
@@ -442,6 +485,12 @@ void handleKeyPress(unsigned char key, int x, int y)
   case '4':
    cout << "You have chosen Slerp" << endl;
    interpolationType = 4;
+   break;
+  case 'w':
+   save();
+   break;
+  case 'l':
+   load();
    break;
   case 'q':
    exit(0);
