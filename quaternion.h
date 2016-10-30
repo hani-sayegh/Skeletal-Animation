@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <cmath>
+#include <glm/gtc/matrix_transform.hpp>
 
 struct Quaternion
 {
@@ -33,29 +34,6 @@ struct Quaternion
   /* r[3] = col3; */
 
 
-  /* tmat3x3<T, P> Result(T(1)); */
-  /* T qxx(q.x * q.x); */
-  /* T qyy(q.y * q.y); */
-  /* T qzz(q.z * q.z); */
-  /* T qxz(q.x * q.z); */
-  /* T qxy(q.x * q.y); */
-  /* T qyz(q.y * q.z); */
-  /* T qwx(q.w * q.x); */
-  /* T qwy(q.w * q.y); */
-  /* T qwz(q.w * q.z); */
-
-  /* Result[0][0] = T(1) - T(2) * (qyy +  qzz); */
-  /* Result[0][1] = T(2) * (qxy + qwz); */
-  /* Result[0][2] = T(2) * (qxz - qwy); */
-
-  /* Result[1][0] = T(2) * (qxy - qwz); */
-  /* Result[1][1] = T(1) - T(2) * (qxx +  qzz); */
-  /* Result[1][2] = T(2) * (qyz + qwx); */
-
-  /* Result[2][0] = T(2) * (qxz + qwy); */
-  /* Result[2][1] = T(2) * (qyz - qwx); */
-  /* Result[2][2] = T(1) - T(2) * (qxx +  qyy); */
-  /* return Result; */
   float z = q.axis.z;
   float zz = z * z;
   r[0][0] = 1 - 2 * zz;
@@ -97,6 +75,50 @@ struct Quaternion
  /*  return r; */
  /* } */
 
+ static inline glm::mat4 eulerLerp(Quaternion q, Quaternion q2, float t)
+ {
+  float angleZ = atan2(2 * (q.axis.x * q.axis.y + q.axis.z * q.angle), -q.axis.z * q.axis.z + q.angle * q.angle);
+  float angleZ2 = atan2(2 * (q2.axis.x * q2.axis.y + q2.axis.z * q2.angle), -q2.axis.z * q2.axis.z + q2.angle * q2.angle);
+  float t2 = 1 - t;
+
+  float finalAngle = t2 * angleZ + t * angleZ2;
+
+  return glm::rotate(glm::mat4(1.f), finalAngle, glm::vec3(0, 0, 1));
+ }
+
+ static inline glm::mat4 slerp(Quaternion source, Quaternion destination, float t)
+ {
+  float angle = acos(
+    source.angle * destination.angle + 
+    source.axis.x * destination.axis.x + 
+    source.axis.y * destination.axis.y + 
+    source.axis.z * destination.axis.z
+    );
+
+  float sinAngle = sin(angle);
+
+  float t2 = 1 - t;
+
+  //angle between quaternions is 0
+  if(sinAngle == 0)
+  {
+   //avoid division by 0, and return current quaternion (rotation)
+   return Quaternion::matrix(source);
+  }
+
+  float sourceC = sin(angle * t2) / sinAngle;
+  float destC = sin(angle * t) / sinAngle;
+
+  Quaternion finalQuaternion;
+  finalQuaternion.angle = sourceC * source.angle + destC * destination.angle;
+
+  finalQuaternion.axis.x = sourceC * source.axis.x + destC * destination.axis.x;
+  finalQuaternion.axis.y = sourceC * source.axis.y + destC * destination.axis.y;
+  finalQuaternion.axis.z = sourceC * source.axis.z + destC * destination.axis.z;
+
+  return Quaternion::matrix(finalQuaternion);
+ }
+
  static inline Quaternion lerp(Quaternion source, Quaternion destination, float t)
  {
   float t2 = 1 - t;
@@ -106,7 +128,7 @@ struct Quaternion
 
   /* glm::vec3 axis = glm::vec3(0, 0, 1); */
 
-//no need to normalize here since we are already using two normalized
+  //no need to normalize here since we are already using two normalized
   Quaternion r;
   r.angle = angle;
   r.axis = axis;

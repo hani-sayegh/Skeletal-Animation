@@ -254,7 +254,7 @@ static Pose p;
 
 static float stepSize = 0.1;
 bool noAnimate=true;
-int interpolationType = 3;
+int interpolationType = 4;
 
 void animate(int value)
 {
@@ -274,35 +274,6 @@ void animate(int value)
   Joint &currJoint = myDefMesh.mySkeleton.joints[i+1];
   int add = 1 + pose * 18;
 
-  if(interpolationType == 3)
-  {
-   /* glm::mat4 test=glm::mat4_cast(glm::lerp(p.qs[i + add], p.qs[i + add + 18], t)); */
-   /* interpolated[i] = test; */
-
-   /* for(auto i = 0; i != 4; ++i) */
-   /* { */
-   /*  for(auto j = 0; j != 4; ++j) */
-   /*  { */
-   /*   cout << test[i][j] << '\t'; */
-   /*  } */
-   /*  cout << endl; */
-   /* } */
-
-   glm::mat4 test=Quaternion::matrix(Quaternion::lerp(p.as[i + add], p.as[i + add + 18], t));
-   interpolated[i] = test;
-
-   /* for(auto i = 0; i != 4; ++i) */
-   /* { */
-   /*  for(auto j = 0; j != 4; ++j) */
-   /*  { */
-   /*   cout << test[i][j] << '\t'; */
-   /*  } */
-   /*  cout << endl; */
-   /* } */
-
-   /* exit(0); */
-  }
-
   if(interpolationType == 1)
   {
    glm::mat4 f1 = p.Ts[i + add];
@@ -311,15 +282,34 @@ void animate(int value)
    currJoint.T = interpolated[i];
    currJoint.globalP = currJoint.T * glm::vec4(currJoint.position.x, currJoint.position.y, currJoint.position.z, 1.0);
   }
+  else if(interpolationType == 2)
+  {
+   glm::mat4 test= Quaternion::eulerLerp(p.as[i + add], p.as[i + add + 18], t);
+   interpolated[i] = test;
+  }
+  else if(interpolationType == 3)
+  {
+   /* glm::mat4 test=glm::mat4_cast(glm::lerp(p.qs[i + add], p.qs[i + add + 18], t)); */
+   /* interpolated[i] = test; */
+
+   glm::mat4 test=Quaternion::matrix(Quaternion::lerp(p.as[i + add], p.as[i + add + 18], t));
+   interpolated[i] = test;
+  }
+  else if(interpolationType == 4)
+  {
+   glm::mat4 test= Quaternion::slerp(p.as[i + add], p.as[i + add + 18], t);
+   interpolated[i] = test;
+  }
  }
 
  glm::mat4 justfnow [17];
- if(interpolationType == 3)
+ if(interpolationType != 1)
  {
   //below is only for quat
   auto & access = myDefMesh.mySkeleton.joints;
   for(auto i = 0; i != 17; ++i)
   {
+   Joint &currJoint = myDefMesh.mySkeleton.joints[i+1];
    glm::vec4 parentJ=access[access[i + 1].parent].globalP;
 
    glm::mat4 tParentPos = glm::translate(glm::mat4(1.f), glm::vec3(parentJ));
@@ -333,6 +323,8 @@ void animate(int value)
     justfnow[currentJointIndex]= tParentPos * rot * tNegParentPos * justfnow[currentJointIndex];
     currentJointIndex = access[currentJointIndex + 1].child - 1;
    }
+   currJoint.T = justfnow[i];
+   currJoint.globalP = currJoint.T * glm::vec4(currJoint.position.x, currJoint.position.y, currJoint.position.z, 1.0);
   }
  }
 
@@ -350,8 +342,7 @@ void animate(int value)
    if(interpolationType == 1)
     fp += cW * interpolated[j] * iP; 
 
-   if(interpolationType == 3)
-    /* fp += cW * (ppos + interpolated[j] * (iP - ppos)); */ 
+   if(interpolationType != 1)
     fp += cW * justfnow[j] * iP; 
   }
   myDefMesh.pmodel->vertices[i] = fp.x, myDefMesh.pmodel->vertices[i + 1] = fp.y, myDefMesh.pmodel->vertices[i + 2] = fp.z;
