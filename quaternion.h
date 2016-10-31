@@ -96,7 +96,7 @@ struct Quaternion
     );
 
   float sinAngle = sin(angle);
-  std::cout << angle << std::endl;
+  /* std::cout << angle << std::endl; */
 
   float t2 = 1 - t;
 

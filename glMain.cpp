@@ -400,8 +400,9 @@ void save()
  cout << "Choose file name you would like to save to: " << std::flush;
  string filename = "test";
  string extension = ".anim";
+ cin >> filename;
  string finalFile = filename + extension;
- /* cin >> filename; */
+
  std::ofstream f;
  f.open(finalFile);
  const auto & quaternions = p.as;
@@ -414,6 +415,52 @@ void save()
   f << ' ' << quat.axis.z;
   f << '\n';
  }
+
+ f << 4002 << '\n';
+ for(auto a : p.angles)
+ {
+  f << a << '\n';
+ }
+
+ f << 4002 << '\n';
+ for(auto too: p.Ts)
+ {
+  f <<  too[0][0];
+  f<< '\n';
+  f <<  too[0][1];
+  f<< '\n';
+  f <<  too[0][2];
+  f<< '\n';
+  f <<  too[0][3];
+  f<< '\n';
+
+  f <<  too[1][0];
+  f<< '\n';
+  f <<  too[1][1] ;
+  f<< '\n';
+  f <<  too[1][2] ;
+  f<< '\n';
+  f <<  too[1][3] ;
+  f<< '\n';
+
+  f <<  too[2][0] ;
+  f<< '\n';
+  f <<  too[2][1] ;
+  f<< '\n';
+  f <<  too[2][2] ;
+  f<< '\n';
+  f <<  too[2][3] ;
+  f<< '\n';
+
+  f <<  too[3][0] ;
+  f<< '\n';
+  f <<  too[3][1] ;
+  f<< '\n';
+  f <<  too[3][2] ;
+  f<< '\n';
+  f <<  too[3][3];
+  f<< '\n';
+ }
  cout << "Done saving data to animation file: " << finalFile << endl;
 }
 
@@ -422,14 +469,24 @@ void load()
  cout << "Choose file name you would like to load from: " << std::flush;
  string filename = "test";
  string extension = ".anim";
+ cin >> filename;
+
  string finalFile = filename + extension;
- /* cin >> filename; */
  std::ifstream f(finalFile);
  p.as.clear();
+ p.angles.clear();
+ p.Ts.clear();
+
  f >> p.nPose;
  float val;
+
  while(f >> val)
  {
+  if(val == 4002)
+  {
+   break;
+  }
+
   float x, y, z;
   f >> x >> y >> z;
 
@@ -438,6 +495,32 @@ void load()
   q.axis = glm::vec3(x, y, z);
   p.as.push_back(q);
  }
+
+ float finally;
+ while(f >> finally)
+ {
+  if(finally == 4002)
+   break;
+  p.angles.push_back(finally);
+ }
+
+ float r;
+ while(f >> r)
+ {
+  glm::mat4 good;
+  for(auto i = 0; i != 4; ++i)
+  {
+   for(auto j = 0; j != 4; ++j)
+   {
+    good [i][j]=r;
+
+    if(!(i == 3 && j == 3))
+     f >> r;
+   }
+  }
+  p.Ts.push_back(good);
+ }
+
  cout << "Done loading animation file: " << finalFile << endl;
 }
 
