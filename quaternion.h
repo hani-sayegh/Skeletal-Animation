@@ -96,11 +96,13 @@ struct Quaternion
     );
 
   float sinAngle = sin(angle);
+  std::cout << angle << std::endl;
 
   float t2 = 1 - t;
 
   //angle between quaternions is 0
-  if(sinAngle == 0)
+  //why isnan only happens when loading file?
+  if(sinAngle == 0 || std::isnan(sinAngle))
   {
    //avoid division by 0, and return current quaternion (rotation)
    return Quaternion::matrix(source);

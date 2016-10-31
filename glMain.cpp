@@ -276,9 +276,13 @@ void animate(int value)
 
   if(interpolationType == 1)
   {
-   glm::mat4 f1 = p.Ts[i + add];
-   glm::mat4 f2 = p.Ts[i + add + 18] - f1;
-   interpolated[i] = f1 + t*f2;
+   /* glm::mat4 f1 = p.Ts[i + add]; */
+   /* glm::mat4 f2 = p.Ts[i + add + 18] - f1; */
+   /* interpolated[i] = f1 + t*f2; */
+
+   glm::mat4 test= Quaternion::matrix(p.as[i + add]);
+   test = test + t *(Quaternion::matrix(p.as[i + add + 18]) - test);
+   interpolated[i] = test;
    currJoint.T = interpolated[i];
    currJoint.globalP = currJoint.T * glm::vec4(currJoint.position.x, currJoint.position.y, currJoint.position.z, 1.0);
   }
@@ -303,7 +307,7 @@ void animate(int value)
  }
 
  glm::mat4 justfnow [17];
- if(interpolationType != 1)
+ if(interpolationType != 0)
  {
   //below is only for quat
   auto & access = myDefMesh.mySkeleton.joints;
@@ -318,7 +322,8 @@ void animate(int value)
 
    int currentJointIndex = i;
    //bug here when loading from file
-   while(currentJointIndex != -2 && access[i + 1].angle != 0)
+   //&& access[i + 1].angle != 0
+   while(currentJointIndex != -2 )
    {
     justfnow[currentJointIndex]= tParentPos * rot * tNegParentPos * justfnow[currentJointIndex];
     currentJointIndex = access[currentJointIndex + 1].child - 1;
@@ -339,10 +344,10 @@ void animate(int value)
 
    auto ppos =myDefMesh.mySkeleton.joints[myDefMesh.mySkeleton.joints[j + 1].parent].globalP;
 
-   if(interpolationType == 1)
-    fp += cW * interpolated[j] * iP; 
+   /* if(interpolationType == 1) */
+   /*  fp += cW * interpolated[j] * iP; */ 
 
-   if(interpolationType != 1)
+   if(interpolationType != 0)
     fp += cW * justfnow[j] * iP; 
   }
   myDefMesh.pmodel->vertices[i] = fp.x, myDefMesh.pmodel->vertices[i + 1] = fp.y, myDefMesh.pmodel->vertices[i + 2] = fp.z;
@@ -394,9 +399,11 @@ void save()
 {
  cout << "Choose file name you would like to save to: " << std::flush;
  string filename = "test";
+ string extension = ".anim";
+ string finalFile = filename + extension;
  /* cin >> filename; */
  std::ofstream f;
- f.open(filename + ".anim");
+ f.open(finalFile);
  const auto & quaternions = p.as;
  f << p.nPose << '\n';
  for(auto quat : quaternions)
@@ -407,14 +414,17 @@ void save()
   f << ' ' << quat.axis.z;
   f << '\n';
  }
+ cout << "Done saving data to animation file: " << finalFile << endl;
 }
 
 void load()
 {
  cout << "Choose file name you would like to load from: " << std::flush;
  string filename = "test";
+ string extension = ".anim";
+ string finalFile = filename + extension;
  /* cin >> filename; */
- std::ifstream f(filename + ".anim");
+ std::ifstream f(finalFile);
  p.as.clear();
  f >> p.nPose;
  float val;
@@ -428,7 +438,7 @@ void load()
   q.axis = glm::vec3(x, y, z);
   p.as.push_back(q);
  }
- cout << "Done loading animation file: " << filename << endl;
+ cout << "Done loading animation file: " << finalFile << endl;
 }
 
 void handleKeyPress(unsigned char key, int x, int y)
